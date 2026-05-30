@@ -305,6 +305,26 @@ func (r *Repository) ListReplyComments(_ context.Context, parentID, limit, offse
 	return paginateComments(list, limit, offset), nil
 }
 
+func (r *Repository) CommentsHaveReplies(_ context.Context, commentIDs []int) (map[int]bool, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	result := make(map[int]bool, len(commentIDs))
+	for _, id := range commentIDs {
+		result[id] = false
+	}
+
+	for _, c := range r.comments {
+		if c.ParentID == nil || c.Status != model.TypeStatusActive {
+			continue
+		}
+		if _, ok := result[*c.ParentID]; ok {
+			result[*c.ParentID] = true
+		}
+	}
+	return result, nil
+}
+
 func paginateUsers(list []*model.User, limit, offset int) []*model.User {
 	if offset >= len(list) {
 		return []*model.User{}

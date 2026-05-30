@@ -26,6 +26,10 @@ func (r *commentResolver) Post(ctx context.Context, obj *model.Comment) (*model.
 	return r.loadPost(ctx, obj.Post.ID)
 }
 
+func (r *commentResolver) HasReplies(ctx context.Context, obj *model.Comment) (bool, error) {
+	return loaders.GetHasReplies(ctx, obj.ID)
+}
+
 func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*model.User, error) {
 	u, hash, err := r.repo.GetUserByEmail(ctx, input.Email)
 	if err != nil {

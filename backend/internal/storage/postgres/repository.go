@@ -382,6 +382,36 @@ func (r *Repository) ListReplyComments(ctx context.Context, parentID, limit, off
 	return scanComments(rows)
 }
 
+func (r *Repository) CommentsHaveReplies(ctx context.Context, commentIDs []int) (map[int]bool, error) {
+	result := make(map[int]bool, len(commentIDs))
+	for _, id := range commentIDs {
+		result[id] = false
+	}
+	if len(commentIDs) == 0 {
+		return result, nil
+	}
+
+	placeholders, args := utils.CreatePlaceholders(commentIDs)
+	query := fmt.Sprintf(`
+		SELECT DISTINCT parent_id FROM comments
+		WHERE parent_id IN (%s) AND status = 'active'`, strings.Join(placeholders, ","))
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var parentID int
+		if err := rows.Scan(&parentID); err != nil {
+			return nil, err
+		}
+		result[parentID] = true
+	}
+	return result, rows.Err()
+}
+
 func scanUsers(rows *sql.Rows) ([]*model.User, error) {
 	var users []*model.User
 	for rows.Next() {

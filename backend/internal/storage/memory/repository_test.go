@@ -60,6 +60,14 @@ func TestCreatePostAndCommentsHierarchy(t *testing.T) {
 	if len(deepReplies) != 1 || deepReplies[0].ID != deep.ID {
 		t.Fatalf("expected 1 deep reply, got %+v", deepReplies)
 	}
+
+	has, err := repo.CommentsHaveReplies(ctx, []int{root.ID, reply.ID, deep.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !has[root.ID] || !has[reply.ID] || has[deep.ID] {
+		t.Fatalf("has_replies: root=%v reply=%v deep=%v", has[root.ID], has[reply.ID], has[deep.ID])
+	}
 }
 
 func TestCommentsDisabled(t *testing.T) {

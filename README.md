@@ -48,7 +48,7 @@ docker compose up --build
 
 Работает в `posts`, `users`, `User.posts`, `Post.comments`, `replyComments`.
 
-Комментарии к посту — только корневые (`Post.comments`). Ответы на комментарий — `replyComments(commentId: ...)`, для следующего уровня снова `replyComments`, но уже с id дочернего комментария. Писать ответ — всегда `createComment` с `parent_id`.
+Комментарии к посту — только корневые (`Post.comments`). Ответы на комментарий — `replyComments(commentId: ...)`, для следующего уровня снова `replyComments`, но уже с id дочернего комментария. Писать ответ — всегда `createComment` с `parent_id`. У комментария поле `has_replies` — есть ли прямые ответы (без загрузки списка).
 
 Следующая страница: увеличь `offset` на `limit`. Если пришло меньше записей, чем `limit`, — данные кончились. Поля `totalCount` нет.
 

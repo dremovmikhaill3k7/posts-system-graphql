@@ -36,4 +36,5 @@ type Repository interface {
 	ListRootComments(ctx context.Context, postID, limit, offset int) ([]*model.Comment, error)
 	ListRootCommentsForPosts(ctx context.Context, postIDs []int, limit, offset int) (map[int][]*model.Comment, error)
 	ListReplyComments(ctx context.Context, parentID, limit, offset int) ([]*model.Comment, error)
+	CommentsHaveReplies(ctx context.Context, commentIDs []int) (map[int]bool, error)
 }

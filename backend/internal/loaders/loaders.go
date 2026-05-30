@@ -23,6 +23,7 @@ type Loaders struct {
 	User         *dataloadgen.Loader[int, *model.User]
 	Post         *dataloadgen.Loader[int, *model.Post]
 	RootComments *dataloadgen.Loader[RootCommentsKey, []*model.Comment]
+	HasReplies   *dataloadgen.Loader[int, bool]
 }
 
 func New(repo repository.Repository) *Loaders {
@@ -31,6 +32,7 @@ func New(repo repository.Repository) *Loaders {
 		User:         dataloadgen.NewLoader(batchUsers(repo), wait),
 		Post:         dataloadgen.NewLoader(batchPosts(repo), wait),
 		RootComments: dataloadgen.NewLoader(batchRootComments(repo), wait),
+		HasReplies:   dataloadgen.NewLoader(batchHasReplies(repo), wait),
 	}
 }
 
@@ -48,6 +50,25 @@ func GetPost(ctx context.Context, id int) (*model.Post, error) {
 
 func GetRootComments(ctx context.Context, postID, limit, offset int) ([]*model.Comment, error) {
 	return For(ctx).RootComments.Load(ctx, RootCommentsKey{PostID: postID, Limit: limit, Offset: offset})
+}
+
+func GetHasReplies(ctx context.Context, commentID int) (bool, error) {
+	return For(ctx).HasReplies.Load(ctx, commentID)
+}
+
+func batchHasReplies(repo repository.Repository) func(context.Context, []int) ([]bool, []error) {
+	return func(ctx context.Context, ids []int) ([]bool, []error) {
+		m, err := repo.CommentsHaveReplies(ctx, ids)
+		if err != nil {
+			return nil, errsAll(err, len(ids))
+		}
+		out := make([]bool, len(ids))
+		errs := make([]error, len(ids))
+		for i, id := range ids {
+			out[i] = m[id]
+		}
+		return out, errs
+	}
 }
 
 func batchUsers(repo repository.Repository) func(context.Context, []int) ([]*model.User, []error) {

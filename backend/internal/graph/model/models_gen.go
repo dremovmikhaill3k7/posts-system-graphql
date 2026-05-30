@@ -11,14 +11,15 @@ import (
 )
 
 type Comment struct {
-	ID        int        `json:"id"`
-	ParentID  *int       `json:"parent_id,omitempty"`
-	User      *User      `json:"user"`
-	Post      *Post      `json:"post"`
-	Text      string     `json:"text"`
-	Status    TypeStatus `json:"status"`
-	CreatedAt *time.Time `json:"created_at,omitempty"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	ID         int        `json:"id"`
+	ParentID   *int       `json:"parent_id,omitempty"`
+	User       *User      `json:"user"`
+	Post       *Post      `json:"post"`
+	Text       string     `json:"text"`
+	HasReplies bool       `json:"has_replies"`
+	Status     TypeStatus `json:"status"`
+	CreatedAt  *time.Time `json:"created_at,omitempty"`
+	UpdatedAt  *time.Time `json:"updated_at,omitempty"`
 }
 
 type CreateCommentInput struct {

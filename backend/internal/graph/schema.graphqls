@@ -31,6 +31,7 @@ type Comment {
   user: User!
   post: Post!
   text: String!
+  has_replies: Boolean!
   status: TypeStatus!
   created_at: Time
   updated_at: Time

@@ -43,14 +43,15 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Comment struct {
-		CreatedAt func(childComplexity int) int
-		ID        func(childComplexity int) int
-		ParentID  func(childComplexity int) int
-		Post      func(childComplexity int) int
-		Status    func(childComplexity int) int
-		Text      func(childComplexity int) int
-		UpdatedAt func(childComplexity int) int
-		User      func(childComplexity int) int
+		CreatedAt  func(childComplexity int) int
+		HasReplies func(childComplexity int) int
+		ID         func(childComplexity int) int
+		ParentID   func(childComplexity int) int
+		Post       func(childComplexity int) int
+		Status     func(childComplexity int) int
+		Text       func(childComplexity int) int
+		UpdatedAt  func(childComplexity int) int
+		User       func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -98,6 +99,8 @@ type ComplexityRoot struct {
 type CommentResolver interface {
 	User(ctx context.Context, obj *model.Comment) (*model.User, error)
 	Post(ctx context.Context, obj *model.Comment) (*model.Post, error)
+
+	HasReplies(ctx context.Context, obj *model.Comment) (bool, error)
 }
 type MutationResolver interface {
 	Login(ctx context.Context, input model.LoginInput) (*model.User, error)
@@ -146,6 +149,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Comment.CreatedAt(childComplexity), true
+	case "Comment.has_replies":
+		if e.ComplexityRoot.Comment.HasReplies == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Comment.HasReplies(childComplexity), true
 	case "Comment.id":
 		if e.ComplexityRoot.Comment.ID == nil {
 			break
@@ -551,6 +560,8 @@ func (ec *executionContext) childFields_Comment(ctx context.Context, field graph
 		return ec.fieldContext_Comment_post(ctx, field)
 	case "text":
 		return ec.fieldContext_Comment_text(ctx, field)
+	case "has_replies":
+		return ec.fieldContext_Comment_has_replies(ctx, field)
 	case "status":
 		return ec.fieldContext_Comment_status(ctx, field)
 	case "created_at":
@@ -1172,6 +1183,29 @@ func (ec *executionContext) _Comment_text(ctx context.Context, field graphql.Col
 }
 func (ec *executionContext) fieldContext_Comment_text(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("Comment", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Comment_has_replies(ctx context.Context, field graphql.CollectedField, obj *model.Comment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Comment_has_replies(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Comment().HasReplies(ctx, obj)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Comment_has_replies(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Comment", field, true, true, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _Comment_status(ctx context.Context, field graphql.CollectedField, obj *model.Comment) (ret graphql.Marshaler) {
@@ -3560,6 +3594,42 @@ func (ec *executionContext) _Comment(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "has_replies":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Comment_has_replies(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "status":
 			out.Values[i] = ec._Comment_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

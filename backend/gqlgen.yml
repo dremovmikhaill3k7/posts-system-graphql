@@ -179,6 +179,8 @@ models:
         resolver: true
       post:
         resolver: true
+      has_replies:
+        resolver: true
   ID:
     model:
       - github.com/99designs/gqlgen/graphql.Int
