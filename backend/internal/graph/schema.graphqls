@@ -1,0 +1,85 @@
+scalar Time
+
+enum TypeStatus {
+  active
+  blocked
+}
+
+type User {
+  id: ID!
+  username: String!
+  email: String!
+  posts(limit: Int, offset: Int): [Post!]!
+  status: TypeStatus!
+  created_at: Time
+}
+
+type Post {
+  id: ID!
+  user: User!
+  text: String!
+  can_have_comm: Boolean!
+  comments(limit: Int, offset: Int): [Comment!]!
+  status: TypeStatus!
+  created_at: Time
+  updated_at: Time
+}
+
+type Comment {
+  id: ID!
+  parent_id: ID
+  user: User!
+  post: Post!
+  text: String!
+  status: TypeStatus!
+  created_at: Time
+  updated_at: Time
+}
+
+type Query {
+  user(id: ID!): User
+  users(limit: Int, offset: Int, search: String): [User!]!
+  post(id: ID!): Post
+  posts(limit: Int, offset: Int, search: String): [Post!]!
+  replyComments(commentId: ID!, limit: Int, offset: Int): [Comment!]!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input RegisterInput {
+  email: String!
+  password: String!
+  username: String!
+}
+
+input CreatePostInput {
+  text: String!
+  can_have_comm: Boolean
+}
+
+input CreateCommentInput {
+  post_id: ID!
+  parent_id: ID
+  text: String!
+}
+
+input UpdatePostInput {
+  post_id: ID!
+  can_have_comm: Boolean!
+}
+
+type Mutation {
+  login(input: LoginInput!): User!
+  register(input: RegisterInput!): User!
+  logout: Boolean!
+  createPost(input: CreatePostInput!): Post!
+  createComment(input: CreateCommentInput!): Comment!
+  updatePost(input: UpdatePostInput!): Post!
+}
+
+type Subscription {
+  commentAdded(postId: ID!): Comment!
+}
